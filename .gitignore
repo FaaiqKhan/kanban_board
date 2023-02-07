@@ -10,3 +10,6 @@ local.properties
 
 # iOS
 ios/Pods/
+
+# Flutter
+.dart_tool/

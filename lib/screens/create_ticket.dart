@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:kanban_board/models/brief_ticket_model.dart';
 import 'package:kanban_board/utils/utils.dart';
 
 class CreateTicket extends StatefulWidget {
@@ -15,7 +17,7 @@ class _CreateTicketState extends State<CreateTicket> {
 
   final double spaceBetweenTextField = 15;
 
-  String? status;
+  String? summary, description, status;
 
   @override
   void didChangeDependencies() {
@@ -29,8 +31,9 @@ class _CreateTicketState extends State<CreateTicket> {
       body: SafeArea(
         child: GridTile(
           header: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: Utils.screenPadding),
+            padding: const EdgeInsets.symmetric(
+              horizontal: Utils.screenPadding,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -45,7 +48,33 @@ class _CreateTicketState extends State<CreateTicket> {
           footer: FittedBox(
             fit: BoxFit.scaleDown,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  _formKey.currentState!.save();
+                  Box<BriefTicketModel> box;
+                  if (Hive.isBoxOpen(status!)) {
+                    box = Hive.box(status!);
+                  } else {
+                    box = await Hive.openBox(status!);
+                  }
+                  int len = box.length;
+                  BriefTicketModel model = BriefTicketModel(
+                    id: len,
+                    ticketNumber: "AR-$len",
+                    title: summary!,
+                    subtitle: description!,
+                    status: status!,
+                  );
+                  box.put("AR-$len", model);
+                  Navigator.pop(context, [status, model]);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Please fill all required fields"),
+                    ),
+                  );
+                }
+              },
               child: const Text("Create"),
             ),
           ),
@@ -76,18 +105,16 @@ class _CreateTicketState extends State<CreateTicket> {
                           ),
                           value: status,
                           items: Utils.statusItems,
-                          onChanged: (value) {
-                            setState(() {
-                              status = value!;
-                            });
-                          },
+                          onChanged: (value) => setState(() => status = value!),
                         ),
                       ),
                     ),
                     const Text(
-                        "This is a ticket's initial status upon creation"),
+                      "This is a ticket's initial status upon creation",
+                    ),
                     SizedBox(height: spaceBetweenTextField),
                     TextFormField(
+                      onSaved: (value) => summary = value,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(borderSide: BorderSide()),
                         label: Text("Summary"),
@@ -101,6 +128,7 @@ class _CreateTicketState extends State<CreateTicket> {
                     ),
                     SizedBox(height: spaceBetweenTextField),
                     TextFormField(
+                      onSaved: (value) => description = value,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         label: Text("Description"),

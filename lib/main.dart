@@ -1,23 +1,27 @@
 import 'package:drag_and_drop_lists/drag_and_drop_lists.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:kanban_board/adapters/BriefTicketModelAdapter.dart';
 
 import 'package:kanban_board/screens/create_ticket.dart';
 import 'package:kanban_board/utils/utils.dart';
 import 'package:kanban_board/screens/view_ticket.dart';
+import 'package:kanban_board/widgets/ticket_holder_footer.dart';
+import 'package:kanban_board/widgets/ticket_holder_header.dart';
 
 import 'models/brief_ticket_model.dart';
 import 'widgets/brief_ticket.dart';
 
-void main() {
-  Hive.initFlutter();
+void main() async {
+  await Hive.initFlutter();
+  Hive.registerAdapter(BriefTicketModelAdapter());
   runApp(
     MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyApp(),
+      home: const Home(),
       routes: {
         BriefTicket.routeName: (ctx) => const Ticket(),
         CreateTicket.routeName: (ctx) => const CreateTicket(),
@@ -26,109 +30,194 @@ void main() {
   );
 }
 
+class Home extends StatelessWidget {
+  const Home({Key? key}) : super(key: key);
+
+  Future<Map<String, List<BriefTicketModel>>> getData() async {
+    var todoBox = await Hive.openBox<BriefTicketModel>(Utils.statusToDo);
+    var inProgressBox =
+        await Hive.openBox<BriefTicketModel>(Utils.statusInProgress);
+    var doneBox = await Hive.openBox<BriefTicketModel>(Utils.statusDone);
+
+    List<BriefTicketModel> todoTickets = todoBox.values.toList();
+    List<BriefTicketModel> inProgressTickets = inProgressBox.values.toList();
+    List<BriefTicketModel> doneTickets = doneBox.values.toList();
+
+    return {
+      Utils.statusToDo: todoTickets,
+      Utils.statusInProgress: inProgressTickets,
+      Utils.statusDone: doneTickets
+    };
+  }
+
+  Widget feedbackView(Widget child) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          width: 3,
+          color: Colors.blueAccent,
+        ),
+        borderRadius: const BorderRadius.all(
+          Radius.circular(10),
+        ),
+      ),
+      child: child,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: FutureBuilder<Map<String, List<BriefTicketModel>>>(
+          future: getData(),
+          builder: (ctx, snapShot) {
+            List<DragAndDropItem> todoItems = [];
+            List<DragAndDropItem> inProgressItems = [];
+            List<DragAndDropItem> doneItems = [];
+            snapShot.data?.forEach((key, value) {
+              switch (key) {
+                case Utils.statusToDo:
+                  for (var val in value) {
+                    todoItems.add(
+                      DragAndDropItem(
+                        child: BriefTicket(val, key: UniqueKey()),
+                        feedbackWidget: feedbackView(BriefTicket(val)),
+                      ),
+                    );
+                  }
+                  break;
+                case Utils.statusInProgress:
+                  for (var val in value) {
+                    inProgressItems.add(
+                      DragAndDropItem(
+                        child: BriefTicket(val, key: UniqueKey()),
+                        feedbackWidget: feedbackView(BriefTicket(val)),
+                      ),
+                    );
+                  }
+                  break;
+                case Utils.statusDone:
+                  for (var val in value) {
+                    doneItems.add(
+                      DragAndDropItem(
+                        child: BriefTicket(val, key: UniqueKey()),
+                        feedbackWidget: feedbackView(BriefTicket(val)),
+                      ),
+                    );
+                  }
+                  break;
+              }
+            });
+            return Visibility(
+              visible: snapShot.connectionState == ConnectionState.done,
+              child: MyApp(
+                todoItems: todoItems,
+                inProgressItems: inProgressItems,
+                doneItems: doneItems,
+              ),
+              replacement: const CircularProgressIndicator(),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final List<DragAndDropItem> todoItems;
+  final List<DragAndDropItem> inProgressItems;
+  final List<DragAndDropItem> doneItems;
+
+  const MyApp({
+    required this.todoItems,
+    required this.inProgressItems,
+    required this.doneItems,
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _MyApp();
 }
 
 class _MyApp extends State<MyApp> {
-  late List<DragAndDropList> contents;
+  List<DragAndDropList> contents = [];
 
-  List<BriefTicketModel> briefTicketsTodo = [
-    BriefTicketModel(1, "AR-1", "Research on drag ui", "Test", "To Do"),
-    BriefTicketModel(2, "AR-2", "Research on List", "Test", "To Do"),
-    BriefTicketModel(3, "AR-3", "Research on Array", "Test", "To Do")
-  ];
-
-  List<BriefTicketModel> briefTicketsInProgress = [
-    BriefTicketModel(1, "AR-1", "Research on drag ui", "Test", "In Progress"),
-    BriefTicketModel(2, "AR-2", "Research on List", "Test", "In Progress"),
-    BriefTicketModel(3, "AR-3", "Research on Array", "Test", "In Progress")
-  ];
-
-  List<BriefTicketModel> briefTicketsCompleted = [
-    BriefTicketModel(1, "AR-1", "Research on drag ui", "Test", "Done"),
-    BriefTicketModel(2, "AR-2", "Research on List", "Test", "Done"),
-    BriefTicketModel(3, "AR-3", "Research on Array", "Test", "Done")
-  ];
+  void addTicket(List<dynamic> value) {
+    int index = 0;
+    if (value.first == Utils.statusInProgress) {
+      index = 1;
+    } else if (value.first == Utils.statusDone) {
+      index = 2;
+    }
+    setState(
+      () => contents[index]
+          .children
+          .add(DragAndDropItem(child: BriefTicket(value.last))),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
     contents = [
       DragAndDropList(
-        header: const Padding(
-          padding: EdgeInsets.all(Utils.screenPadding),
-          child: Text("To Do"),
-        ),
-        footer: ListTile(
-          contentPadding: const EdgeInsets.only(left: Utils.screenPadding),
-          title: const Text("Create ticket"),
-          leading: const Icon(Icons.add, color: Colors.black),
-          horizontalTitleGap: 0,
-          onTap: () => Navigator.pushNamed(
+        canDrag: false,
+        header: const TicketHolderHeader("To Do"),
+        footer: TicketHolderFooter(
+          () => Navigator.pushNamed(
             context,
             CreateTicket.routeName,
-            arguments: "To Do",
+            arguments: Utils.statusToDo,
+          ).then(
+            (value) {
+              if (value != null) {
+                addTicket(value as List<dynamic>);
+              }
+            },
           ),
         ),
-        children: <DragAndDropItem>[
-          DragAndDropItem(child: BriefTicket(briefTicketsTodo.elementAt(0))),
-          DragAndDropItem(child: BriefTicket(briefTicketsTodo.elementAt(1))),
-          DragAndDropItem(child: BriefTicket(briefTicketsTodo.elementAt(2))),
-        ],
+        contentsWhenEmpty: const SizedBox.shrink(),
+        children: widget.todoItems,
       ),
       DragAndDropList(
-        header: const Padding(
-          padding: EdgeInsets.all(Utils.screenPadding),
-          child: Text("In Progress"),
-        ),
-        footer: ListTile(
-          contentPadding: const EdgeInsets.only(left: Utils.screenPadding),
-          title: const Text("Create ticket"),
-          leading: const Icon(Icons.add, color: Colors.black),
-          horizontalTitleGap: 0,
-          onTap: () => Navigator.pushNamed(
+        canDrag: false,
+        header: const TicketHolderHeader("In Progress"),
+        footer: TicketHolderFooter(
+          () => Navigator.pushNamed(
             context,
             CreateTicket.routeName,
-            arguments: "In Progress",
+            arguments: Utils.statusInProgress,
+          ).then(
+            (value) {
+              if (value != null) {
+                addTicket(value as List<dynamic>);
+              }
+            },
           ),
         ),
-        children: <DragAndDropItem>[
-          DragAndDropItem(
-              child: BriefTicket(briefTicketsInProgress.elementAt(0))),
-          DragAndDropItem(
-              child: BriefTicket(briefTicketsInProgress.elementAt(1))),
-          DragAndDropItem(
-              child: BriefTicket(briefTicketsInProgress.elementAt(2))),
-        ],
+        contentsWhenEmpty: const SizedBox.shrink(),
+        children: widget.inProgressItems,
       ),
       DragAndDropList(
-        header: const Padding(
-          padding: EdgeInsets.all(Utils.screenPadding),
-          child: Text("Done"),
-        ),
-        footer: ListTile(
-          contentPadding: const EdgeInsets.only(left: Utils.screenPadding),
-          title: const Text("Create ticket"),
-          leading: const Icon(Icons.add, color: Colors.black),
-          horizontalTitleGap: 0,
-          onTap: () => Navigator.pushNamed(
+        canDrag: false,
+        header: const TicketHolderHeader("Done"),
+        footer: TicketHolderFooter(
+          () => Navigator.pushNamed(
             context,
             CreateTicket.routeName,
-            arguments: "Done",
+            arguments: Utils.statusDone,
+          ).then(
+            (value) {
+              if (value != null) {
+                addTicket(value as List<dynamic>);
+              }
+            },
           ),
         ),
-        children: <DragAndDropItem>[
-          DragAndDropItem(
-              child: BriefTicket(briefTicketsCompleted.elementAt(0))),
-          DragAndDropItem(
-              child: BriefTicket(briefTicketsCompleted.elementAt(1))),
-          DragAndDropItem(
-              child: BriefTicket(briefTicketsCompleted.elementAt(2))),
-        ],
+        contentsWhenEmpty: const SizedBox.shrink(),
+        children: widget.doneItems,
       ),
     ];
   }
