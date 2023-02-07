@@ -1,0 +1,12 @@
+
+# Project
+build/
+*.iml
+
+# Android
+.idea/
+.gradle
+local.properties
+
+# iOS
+ios/Pods/
