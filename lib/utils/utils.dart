@@ -10,6 +10,7 @@ class Utils {
   static const String statusDone = "Done";
   static const String ticketCounterKey = "ticket_counter";
   static const String countKey = "count";
+  static const String initialTime = "0:0:0";
   static const List<DropdownMenuItem<String>> statusItems = [
     DropdownMenuItem(
       value: "To Do",

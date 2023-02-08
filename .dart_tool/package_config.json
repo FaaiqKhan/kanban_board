@@ -230,6 +230,12 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "intl",
+      "rootUri": "file:///Users/anumkhan/.pub-cache/hosted/pub.dev/intl-0.18.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "io",
       "rootUri": "file:///Users/anumkhan/.pub-cache/hosted/pub.dev/io-1.0.4",
       "packageUri": "lib/",
@@ -506,7 +512,7 @@
       "languageVersion": "2.12"
     }
   ],
-  "generated": "2023-02-08T08:43:40.907201Z",
+  "generated": "2023-02-08T15:49:31.784441Z",
   "generator": "pub",
   "generatorVersion": "2.19.1"
 }

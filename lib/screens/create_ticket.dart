@@ -35,7 +35,10 @@ class _CreateTicketState extends State<CreateTicket> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Create Ticket"),
+                Text(
+                  "Create Ticket",
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 IconButton(
                   onPressed: Navigator.of(context).pop,
                   icon: const Icon(Icons.close),
@@ -65,7 +68,8 @@ class _CreateTicketState extends State<CreateTicket> {
                     title: summary!,
                     subtitle: description!,
                     status: status!,
-                    index: box.length
+                    index: box.length,
+                    time: Utils.initialTime,
                   );
 
                   await box.put("AR-$count", model);
@@ -93,7 +97,10 @@ class _CreateTicketState extends State<CreateTicket> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 50),
-                    const Text("Status"),
+                    Text(
+                      "Status",
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                     SizedBox(
                       width: 130,
                       child: Padding(
@@ -109,14 +116,16 @@ class _CreateTicketState extends State<CreateTicket> {
                               horizontal: 10,
                             ),
                           ),
+                          style: Theme.of(context).textTheme.bodyMedium,
                           value: status,
                           items: Utils.statusItems,
                           onChanged: (value) => setState(() => status = value!),
                         ),
                       ),
                     ),
-                    const Text(
+                    Text(
                       "This is a ticket's initial status upon creation",
+                        style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: Utils.spaceBetweenTextField),
                     TextFormField(
@@ -125,6 +134,7 @@ class _CreateTicketState extends State<CreateTicket> {
                         border: OutlineInputBorder(borderSide: BorderSide()),
                         label: Text("Summary"),
                       ),
+                      style: Theme.of(context).textTheme.bodyMedium,
                       validator: (String? value) {
                         if (value == null || value.isEmpty) {
                           return "Please fill ticket summary";
@@ -139,6 +149,7 @@ class _CreateTicketState extends State<CreateTicket> {
                         border: OutlineInputBorder(),
                         label: Text("Description"),
                       ),
+                      style: Theme.of(context).textTheme.bodyMedium,
                       keyboardType: TextInputType.multiline,
                       maxLength: 100,
                       validator: (String? value) {

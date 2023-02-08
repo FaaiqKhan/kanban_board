@@ -40,18 +40,27 @@ class BriefTicket extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   title: Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Text(model.title),
+                    child: Text(
+                      model.title,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                   ),
                   subtitle: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.topLeft,
                     child: Container(
                       color: Colors.grey.shade50,
-                      child: Text(model.subtitle),
+                      child: Text(
+                        model.subtitle,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ),
                   ),
                 ),
-                Text(model.ticketNumber)
+                Text(
+                  model.ticketNumber,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                )
               ],
             ),
           ),

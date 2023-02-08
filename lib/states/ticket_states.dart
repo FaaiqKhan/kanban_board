@@ -1,5 +1,6 @@
 import 'package:drag_and_drop_lists/drag_and_drop_lists.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:kanban_board/models/brief_ticket_model.dart';
 import 'package:kanban_board/screens/create_ticket.dart';
 import 'package:kanban_board/utils/utils.dart';
@@ -94,7 +95,10 @@ class TicketStates extends ChangeNotifier {
     contents = [
       DragAndDropList(
         canDrag: false,
-        header: const TicketHolderHeader("To Do"),
+        header: const TicketHolderHeader(
+          "To Do",
+          icon: Icon(Icons.calendar_today_rounded),
+        ),
         footer: TicketHolderFooter(() {
           Navigator.pushNamed(
             _context,
@@ -110,7 +114,10 @@ class TicketStates extends ChangeNotifier {
       ),
       DragAndDropList(
         canDrag: false,
-        header: const TicketHolderHeader("In Progress"),
+        header: const TicketHolderHeader(
+          "In Progress",
+          icon: Icon(Icons.timer),
+        ),
         footer: TicketHolderFooter(() {
           Navigator.pushNamed(
             _context,
@@ -126,7 +133,7 @@ class TicketStates extends ChangeNotifier {
       ),
       DragAndDropList(
         canDrag: false,
-        header: const TicketHolderHeader("Done"),
+        header: const TicketHolderHeader("Done", icon: Icon(Icons.done)),
         footer: TicketHolderFooter(() {
           Navigator.pushNamed(
             _context,
@@ -143,9 +150,23 @@ class TicketStates extends ChangeNotifier {
     ];
   }
 
+  String _getStatusByIndex(int index) {
+    if (index == 0) {
+      return Utils.statusToDo;
+    } else if (index == 1) {
+      return Utils.statusInProgress;
+    } else {
+      return Utils.statusDone;
+    }
+  }
+
   void onItemReorder(
       int oldItemIndex, int oldListIndex, int newItemIndex, int newListIndex) {
     var movedItem = contents[oldListIndex].children.removeAt(oldItemIndex);
+    String oldStatus = _getStatusByIndex(oldListIndex);
+    String newStatus = _getStatusByIndex(newListIndex);
+    var ele = _map[oldStatus]!.removeAt(oldItemIndex);
+    _map[newStatus]!.insert(newItemIndex, ele);
     contents[newListIndex].children.insert(newItemIndex, movedItem);
     notifyListeners();
   }
@@ -180,10 +201,18 @@ class TicketStates extends ChangeNotifier {
     return parentIndex;
   }
 
-  void updateTicket(BriefTicketModel model, String parentStatus) {
+  void updateTicket(BriefTicketModel model, String parentStatus) async {
+    Box<BriefTicketModel> box;
     int currentIndex = _getIndex(model.status);
 
+    if (Hive.isBoxOpen(parentStatus)) {
+      box = Hive.box<BriefTicketModel>(parentStatus);
+    } else {
+      box = await Hive.openBox<BriefTicketModel>(parentStatus);
+    }
+
     if (model.status == parentStatus) {
+      await box.putAt(model.index, model);
       _map[parentStatus]![model.index] = model;
       contents[currentIndex].children[model.index] = DragAndDropItem(
         child: BriefTicket(model, key: UniqueKey()),

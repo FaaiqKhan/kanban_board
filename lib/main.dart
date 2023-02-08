@@ -1,7 +1,7 @@
 import 'package:drag_and_drop_lists/drag_and_drop_lists.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:kanban_board/adapters/BriefTicketModelAdapter.dart';
+import 'package:kanban_board/adapters/brief_ticket_model_adapter.dart';
 
 import 'package:kanban_board/screens/create_ticket.dart';
 import 'package:kanban_board/states/ticket_states.dart';
@@ -20,6 +20,38 @@ void main() async {
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(
+            fontFamily: 'Lato-Bold',
+            color: Colors.black,
+            overflow: TextOverflow.ellipsis,
+            fontSize: 24,
+          ),
+          titleMedium: TextStyle(
+            fontFamily: 'Lato-Bold',
+            color: Colors.black,
+            overflow: TextOverflow.ellipsis,
+            fontSize: 18,
+          ),
+          titleSmall: TextStyle(
+            fontFamily: 'Lato-Bold',
+            color: Colors.black,
+            overflow: TextOverflow.ellipsis,
+            fontSize: 16,
+          ),
+          bodyLarge: TextStyle(
+            fontFamily: 'Lato-Bold',
+            color: Colors.black,
+            overflow: TextOverflow.ellipsis,
+            fontSize: 14,
+          ),
+          bodyMedium: TextStyle(
+            fontFamily: 'Lato-Regular',
+            color: Colors.black,
+            overflow: TextOverflow.ellipsis,
+            fontSize: 14,
+          ),
+        ),
       ),
       home: ChangeNotifierProvider(
         create: (context) => TicketStates(context),
@@ -97,28 +129,46 @@ class MyApp extends StatelessWidget {
             return Visibility(
               visible: state.isLoading,
               child: child!,
-              replacement: DragAndDropLists(
-                children: state.contents,
-                axis: Axis.horizontal,
-                listWidth: Utils.ticketWidth + 10,
-                listDecoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: const BorderRadius.all(Radius.circular(7.0)),
-                  boxShadow: const <BoxShadow>[
-                    BoxShadow(
-                      color: Colors.black45,
-                      spreadRadius: 3.0,
-                      blurRadius: 6.0,
-                      offset: Offset(2, 3),
+              replacement: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(Utils.screenPadding),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: Utils.screenPadding * 2),
+                        Text("Kanban", style: Theme.of(context).textTheme.titleLarge),
+                        // const SizedBox(width: Utils.screenPadding * 2),
+                        // Text("Project name", style: Theme.of(context).textTheme.titleMedium)
+                      ],
                     ),
-                  ],
-                ),
-                listPadding: const EdgeInsets.only(left: 8.0),
-                lastListTargetSize: 0.0,
-                lastItemTargetHeight: 0.0,
-                verticalAlignment: CrossAxisAlignment.center,
-                onItemReorder: state.onItemReorder,
-                onListReorder: state.onListReorder,
+                  ),
+                  Expanded(
+                    child: DragAndDropLists(
+                      children: state.contents,
+                      axis: Axis.horizontal,
+                      listWidth: Utils.ticketWidth + 10,
+                      listDecoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: const BorderRadius.all(Radius.circular(7.0)),
+                        boxShadow: const <BoxShadow>[
+                          BoxShadow(
+                            color: Colors.black45,
+                            spreadRadius: 3.0,
+                            blurRadius: 6.0,
+                            offset: Offset(2, 3),
+                          ),
+                        ],
+                      ),
+                      listPadding: const EdgeInsets.only(left: 8.0, top: Utils.screenPadding),
+                      lastListTargetSize: 0.0,
+                      lastItemTargetHeight: 0.0,
+                      verticalAlignment: CrossAxisAlignment.center,
+                      onItemReorder: state.onItemReorder,
+                      onListReorder: state.onListReorder,
+                    ),
+                  )
+                ],
               ),
             );
           },
