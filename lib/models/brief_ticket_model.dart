@@ -1,5 +1,5 @@
 class BriefTicketModel {
-  int id;
+  int id, index;
   String ticketNumber, title, subtitle, status;
 
   BriefTicketModel({
@@ -8,5 +8,6 @@ class BriefTicketModel {
     required this.title,
     required this.subtitle,
     required this.status,
+    required this.index,
   });
 }

@@ -15,8 +15,6 @@ class CreateTicket extends StatefulWidget {
 class _CreateTicketState extends State<CreateTicket> {
   final _formKey = GlobalKey<FormState>();
 
-  final double spaceBetweenTextField = 15;
-
   String? summary, description, status;
 
   @override
@@ -57,16 +55,24 @@ class _CreateTicketState extends State<CreateTicket> {
                   } else {
                     box = await Hive.openBox(status!);
                   }
-                  int len = box.length;
+
+                  var counterBox = await Hive.openBox(Utils.ticketCounterKey);
+                  int count = counterBox.get(Utils.countKey, defaultValue: 0);
+                  count++;
                   BriefTicketModel model = BriefTicketModel(
-                    id: len,
-                    ticketNumber: "AR-$len",
+                    id: count,
+                    ticketNumber: "AR-$count",
                     title: summary!,
                     subtitle: description!,
                     status: status!,
+                    index: box.length
                   );
-                  box.put("AR-$len", model);
-                  Navigator.pop(context, [status, model]);
+
+                  await box.put("AR-$count", model);
+                  await counterBox.put(Utils.countKey, count);
+                  await counterBox.close();
+
+                  Navigator.pop(context, model);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -112,7 +118,7 @@ class _CreateTicketState extends State<CreateTicket> {
                     const Text(
                       "This is a ticket's initial status upon creation",
                     ),
-                    SizedBox(height: spaceBetweenTextField),
+                    const SizedBox(height: Utils.spaceBetweenTextField),
                     TextFormField(
                       onSaved: (value) => summary = value,
                       decoration: const InputDecoration(
@@ -126,7 +132,7 @@ class _CreateTicketState extends State<CreateTicket> {
                         return null;
                       },
                     ),
-                    SizedBox(height: spaceBetweenTextField),
+                    const SizedBox(height: Utils.spaceBetweenTextField),
                     TextFormField(
                       onSaved: (value) => description = value,
                       decoration: const InputDecoration(
@@ -142,7 +148,7 @@ class _CreateTicketState extends State<CreateTicket> {
                         return null;
                       },
                     ),
-                    SizedBox(height: spaceBetweenTextField),
+                    const SizedBox(height: Utils.spaceBetweenTextField),
                   ],
                 ),
               ),

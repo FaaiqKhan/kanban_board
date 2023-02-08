@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:kanban_board/models/brief_ticket_model.dart';
+import 'package:kanban_board/states/ticket_states.dart';
 import 'package:kanban_board/utils/utils.dart';
+import 'package:provider/provider.dart';
+
+import '../screens/view_ticket.dart';
 
 class BriefTicket extends StatelessWidget {
   final BriefTicketModel model;
 
   const BriefTicket(this.model, {Key? key}) : super(key: key);
-
-  static const String routeName = "brief_ticket_route";
 
   @override
   Widget build(BuildContext context) {
@@ -17,14 +19,15 @@ class BriefTicket extends StatelessWidget {
       child: GestureDetector(
         onTap: () => Navigator.pushNamed(
           context,
-          BriefTicket.routeName,
-          arguments: {
-            "ticket_number": model.ticketNumber,
-            "title": model.title,
-            "subtitle": model.subtitle,
-            "status": model.status
-          },
-        ),
+          Ticket.routeName,
+          arguments: model,
+        ).then((value) {
+          if (value == null) return;
+          Provider.of<TicketStates>(
+            context,
+            listen: false,
+          ).updateTicket((value as List<dynamic>)[0], value[1]);
+        }),
         child: Card(
           elevation: 5,
           child: Padding(

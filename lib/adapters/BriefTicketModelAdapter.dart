@@ -10,6 +10,7 @@ class BriefTicketModelAdapter extends TypeAdapter<BriefTicketModel> {
       title: reader.readString(),
       subtitle: reader.readString(),
       status : reader.readString(),
+      index: reader.readInt()
     );
   }
 
@@ -23,5 +24,6 @@ class BriefTicketModelAdapter extends TypeAdapter<BriefTicketModel> {
     writer.writeString(obj.title);
     writer.writeString(obj.subtitle);
     writer.writeString(obj.status);
+    writer.writeInt(obj.index);
   }
 }
